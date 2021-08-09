@@ -7,6 +7,7 @@
 char menu();
 void createEmployee(EMap& em);
 void readEmployeeList(EMap& em);
+void deleteEmployee(EMap& em);
 
 int main(int argc, char** argv) {
 
@@ -30,7 +31,7 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'd': {
-                
+                deleteEmployee(em);
                 break;
             }
             case 'e': {
@@ -40,6 +41,10 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'g': {
+                break;
+            }
+            case 'm': {
+                em.printMap();
                 break;
             }
             default: {
@@ -213,4 +218,26 @@ void createEmployee(EMap& em) {
 
 void readEmployeeList(EMap& em) {
     em.printMap();
+}
+
+void deleteEmployee(EMap& em) {
+    em.read_employees_print_table();
+    while(true) {
+        std::cout<<"Enter The Employee ID you wish to delete (Enter -1 to Exit): ";
+        unsigned int id; std::string input;
+        getline(std::cin, input);
+        if(input.substr(0, 2) == "-1")
+            return;
+        else {
+            try {
+                id = std::stoul(input);
+                em.delete_employee(id);
+                break;
+            }
+            catch(const std::invalid_argument& e) {
+                std::cout<<"Please input a valid id."<<std::endl;
+            }
+        }
+    }
+    
 }

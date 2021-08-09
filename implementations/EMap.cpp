@@ -132,7 +132,7 @@ bool EMap::delete_employee(unsigned int employee_id) {
         // go to offset and set bool value to false, indicating record is free
         long delOffset = gotoActiveVar(outFile, offset);
         bool active = false;
-        outFile.seekp(active);
+        outFile.seekp(delOffset);
         outFile.write((char*)&active, sizeof(active));
         outFile.close();
         return true;
@@ -145,6 +145,7 @@ bool EMap::read_employees_print() {
             continue;
         read_employee_print(it->first);
     }
+    return true; // assuming nothing fails
 }
 
 bool EMap::read_employee_print(unsigned int employee_id) {
@@ -198,6 +199,7 @@ bool EMap::read_employees_print_table() {
             std::cout<<"|"<<padStringLeft(std::to_string(e->getEmployeeId()), 8)<<"|"<<padStringCenter(e->getEmployeeName(), 25)<<"|"<<padStringCenter(e->getEmployeePosition(), 25)<<"|"<<padStringCenter(e->getClearanceLevel(), 19)<<"|"<<std::endl;
         }
     }
+    return true; // assuming nothing fails
 }
 
 void EMap::loadAllRecords(std::fstream& inFile) { // assume offset 0

@@ -22,7 +22,7 @@
 // any free space in the file can be determined by setting a
 // UINT_MAX key value to a certain record offset that is now populated
 
-enum FilterType{ID, NAME, POSITION, AGE, GRADE, CLEARANCE_LEVEL};
+enum FilterType{ID, NAME, POSITION, AGE, GRADE, CLEARANCE_LEVEL, NOF};
 class EMap : std::multimap<unsigned int, long> {
     public:
         EMap();

@@ -407,9 +407,11 @@ bool EMap::filterItem(Employee& emp, FilterType ftype, std::string cmp) {
     if(cmp == "") return true; // no comparison to make
     else if(ftype == ID) return std::to_string(emp.getEmployeeId()) == cmp;
     else if(ftype == NAME) return emp.getEmployeeName().find(cmp) != std::string::npos;
+    else if(ftype == POSITION) return emp.getEmployeePosition().find(cmp) != std::string::npos;
     else if(ftype == AGE) return std::to_string(emp.getEmployeeAge()) == cmp;
     else if(ftype == GRADE) return emp.getEmployeePayGrade() == cmp;
     else if(ftype == CLEARANCE_LEVEL) return emp.getEmployeeClearanceLevel() == cmp;
+    else return false; // err
 }
 
 //// END PRIVATE FUNCTIONS ////

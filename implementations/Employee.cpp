@@ -59,10 +59,12 @@ int Employee::getEmployeePayTypeInt() {
 // setters //
 void Employee::setEmployeeName(std::string emp_name) {
     strncpy(this->empdat.employee_name, emp_name.c_str(), 49);
+    this->empdat.employee_name[49] = '\0';
 }
 
 void Employee::setEmployeePosition(std::string emp_position) {
     strncpy(this->empdat.employee_position, emp_position.c_str(), 49);
+    this->empdat.employee_position[49] = '\0';
 }
 
 void Employee::setEmployeeId(unsigned int id) {
@@ -79,6 +81,7 @@ void Employee::setEmployeeClearanceLevel(CLEARANCE clearance) {
 
 void Employee::setEmployeePayGrade(std::string payType) {
     strncpy(this->empdat.employee_pay_grade, payType.c_str(), 4);
+    this->empdat.employee_pay_grade[4] = '\0';
 }
 
 void Employee::setEmployeePayType(TYPE type) {

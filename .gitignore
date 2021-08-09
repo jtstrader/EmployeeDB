@@ -1,4 +1,8 @@
 *.exe
 *.dat
 *.txt
+.vscode/
+*.o
 
+# testing file
+empdi

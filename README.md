@@ -11,3 +11,9 @@ Data in the binary file is organized like a hard drive, in where when data is "d
 The multimap, therefore, is particulary useful for this. Using an `unsigned int` as the key value, I set all deleted record keys in the multimap to C++'s `UINT_MAX` variable from the `climits` library. Because UINT_MAX can store multiple values (since it is a part of the multimap), all deleted records can be referenced instantly by pointing to the UINT_MAX key and pulling whatever value we so desire from the list.
 
 The map is extended in order to provide a multitude of methods that can directly access the data of the map and perform operations without having to make the map a parameter throughout the program. As well as this, it allows the merging of a multimap (of similar type) into the the EMap class meaning that any multimap previously defined with employee data can be created into an EMap, with all needed functions to read, write, and manipulate data.
+
+# Searching and Filtering
+Employee ID's are the primary searching key for this dataset. Searching for employees based on other qualifications (such as pay type) have an average O(n) runtime. Searching for employees based on id has a runtime of O(1).
+
+Listing employee records uses the searching function as a filter and returns a list of output instead of an individual record. The employee listing function can be sorted through some keywords/options to help refine the search, such as listing only Salaried employees. Printing, and by extension filtering, has a runtime of O(n).
+

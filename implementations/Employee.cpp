@@ -3,7 +3,7 @@
 // public functions //
 // constructors & destructor //
 Employee::Employee() {
-
+    this->empdat.employee_id = -1;
 }
 
 Employee::Employee(const Employee& emp) {
@@ -37,6 +37,10 @@ unsigned int Employee::getEmployeeAge() {
 
 std::string Employee::getClearanceLevel() {
     return getClearance(this->empdat.employee_clearance);
+}
+
+std::string Employee::getPayGrade() {
+    return this->empdat.employee_pay_grade;
 }
 
 std::string Employee::getPayType() {
@@ -73,8 +77,12 @@ void Employee::setClearanceLevel(CLEARANCE clearance) {
     this->empdat.employee_clearance = clearance;
 }
 
-void Employee::setPayType(std::string payType) {
+void Employee::setPayGrade(std::string payType) {
     strncpy(this->empdat.employee_pay_grade, payType.c_str(), 4);
+}
+
+void Employee::setPayType(TYPE type) {
+    this->emp_type = type;
 }
 
 // operators
@@ -109,6 +117,7 @@ std::istream& operator >> (std::istream& stream, Employee& emp) {
         emp.empdat.employee_clearance = TOP_SECRET;
     else
         emp.empdat.employee_clearance = NONE;
+    getline(stream, burn); strncpy(emp.empdat.employee_pay_grade, burn.c_str(), 4);
     return stream;
 }
 

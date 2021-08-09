@@ -8,6 +8,8 @@ char menu();
 void createEmployee(EMap& em);
 void readEmployeeList(EMap& em);
 void deleteEmployee(EMap& em);
+void importEmployees(EMap& em);
+void exportEmployees(EMap& em);
 
 int main(int argc, char** argv) {
 
@@ -35,9 +37,11 @@ int main(int argc, char** argv) {
                 break;
             }
             case 'e': {
+                importEmployees(em);
                 break;
             }
             case 'f': {
+                exportEmployees(em);
                 break;
             }
             case 'g': {
@@ -52,7 +56,7 @@ int main(int argc, char** argv) {
                 break;
             }
         }
-    } while(option != 'g' && option != 'f');
+    } while(option != 'g');
 
     return 0;
 }
@@ -186,7 +190,7 @@ void createEmployee(EMap& em) {
 
         WagedEmployee we;
         we.setEmployeeName(name); we.setEmployeePosition(position);
-        we.setEmployeeAge(age); we.setPayType(grade);
+        we.setEmployeeAge(age); we.setPayGrade(grade);
         we.setClearanceLevel((CLEARANCE)clearance); we.setWage(payF); 
         em.add_employee(we);
     }
@@ -210,7 +214,7 @@ void createEmployee(EMap& em) {
 
         SalariedEmployee se;
         se.setEmployeeName(name); se.setEmployeePosition(position);
-        se.setEmployeeAge(age); se.setPayType(grade);
+        se.setEmployeeAge(age); se.setPayGrade(grade);
         se.setClearanceLevel((CLEARANCE)clearance); se.setSalary(payF);
         em.add_employee(se);
     }
@@ -238,6 +242,39 @@ void deleteEmployee(EMap& em) {
                 std::cout<<"Please input a valid id."<<std::endl;
             }
         }
+    }   
+}
+
+void importEmployees(EMap& em) {
+    // import employees from new file, read in data, and write new employees to EMap
+    std::string input;
+    while(true) {
+        std::cout<<"Input .txt file to insert data from (Enter -1 to Exit): ";
+        getline(std::cin, input);
+        if(input.substr(0, 2) == "-1")
+            return;
+        else {
+            if(em.importEmployees(input)) // try to read in file
+                return;
+            else
+                std::cout<<"ERR: File could not be opened. Please insert a valid file name."<<std::endl;
+        }
+    }   
+}
+
+void exportEmployees(EMap& em) {
+    // export employees to a .txt file. File overwritting is, under no circumstances, allowed
+    std::string input;
+    while(true) {
+        std::cout<<"Input the .txt file you wish to write out to. Make sure the file does not already exist! (Enter -1 to Exit): ";
+        getline(std::cin, input);
+        if(input.substr(0, 2) == "-1")
+            return;
+        else {
+            if(em.exportEmployees(input)) // try to export
+                return;
+            else
+                std::cout<<"ERR: File already exists! Please use a file name for a file that does not exist."<<std::endl;
+        }
     }
-    
 }

@@ -31,6 +31,7 @@ class Employee {
         unsigned int getEmployeeId();
         unsigned int getEmployeeAge();
         std::string getClearanceLevel();
+        std::string getPayGrade();
         std::string getPayType();
 
         int getPayTypeInt(); // get integer version of enum return
@@ -41,7 +42,8 @@ class Employee {
         void setEmployeeId(unsigned int);
         void setEmployeeAge(unsigned int);
         void setClearanceLevel(CLEARANCE);
-        void setPayType(std::string);
+        void setPayGrade(std::string);
+        void setPayType(TYPE);
 
         // friend operators
         friend std::ostream& operator << (std::ostream&, const Employee&);

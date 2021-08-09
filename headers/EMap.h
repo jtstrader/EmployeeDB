@@ -30,8 +30,8 @@ class EMap : std::multimap<unsigned int, long> {
         ~EMap();
 
         // EmployeeDB manipulation
-        bool add_employee(SalariedEmployee&);
         bool add_employee(WagedEmployee&);
+        bool add_employee(SalariedEmployee&);
         bool delete_employee(unsigned int employee_id);
 
         bool read_employee_print(unsigned int employee_id);
@@ -43,9 +43,12 @@ class EMap : std::multimap<unsigned int, long> {
         void setFileName(char* fileName);
         void load();
 
+        bool importEmployees(std::string fileName);
+        bool exportEmployees(std::string fileName);
+
     private:
         void loadAllRecords(std::fstream& inFile);
-        void loadEmployeeRecord(std::fstream& inFile);
+        // void loadEmployeeRecord(std::fstream& inFile);
         void loadWageRecord(std::fstream& inFile);
         void loadSalaryRecord(std::fstream& inFile);
 

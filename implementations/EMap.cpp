@@ -50,9 +50,14 @@ bool EMap::add_employee(WagedEmployee& emp) {
 
     // add new data to temporary employee list
     std::fstream outFile(fileName, std::ios::in | std::ios::out | std::ios::binary);
-    emp.setEmployeeId(this->currMaxId+1);
+    if(emp.getEmployeeId() == -1) {
+        emp.setEmployeeId(this->currMaxId+1);
+        this->currMaxId++;
+    }
+    
     if(this->find(emp.getEmployeeId()) != this->end()) {
         std::cout<<"EMap Error: duplicate non-UINT_MAX key. Exiting add_employee..."<<std::endl;
+        currMaxId--;
         return false;
     }
 
@@ -74,7 +79,6 @@ bool EMap::add_employee(WagedEmployee& emp) {
     outFile.write((char*)&emp, sizeof(emp));
     outFile.write((char*)&active, sizeof(active));
     outFile.close(); // save data
-    this->currMaxId++;
     return true; // assume return true == OK status
 }
 
@@ -86,9 +90,13 @@ bool EMap::add_employee(SalariedEmployee& emp) {
 
     // add new data to temporary employee list
     std::fstream outFile(fileName, std::ios::in | std::ios::out | std::ios::binary);
-    emp.setEmployeeId(this->currMaxId+1);
+    if(emp.getEmployeeId() == -1) {
+        emp.setEmployeeId(this->currMaxId+1);
+        currMaxId++;
+    }
     if(this->find(emp.getEmployeeId()) != this->end()) {
         std::cout<<"EMap Error: duplicate non-UINT_MAX key. Exiting add_employee..."<<std::endl;
+        currMaxId--;
         return false;
     }
 
@@ -110,7 +118,6 @@ bool EMap::add_employee(SalariedEmployee& emp) {
     outFile.write((char*)&emp, sizeof(emp));
     outFile.write((char*)&active, sizeof(active));
     outFile.close(); // save data
-    this->currMaxId++;
     return true; // assume return true == OK status
 }
 
@@ -199,21 +206,22 @@ bool EMap::read_employees_print_table() {
             std::cout<<"|"<<padStringLeft(std::to_string(e->getEmployeeId()), 8)<<"|"<<padStringCenter(e->getEmployeeName(), 25)<<"|"<<padStringCenter(e->getEmployeePosition(), 25)<<"|"<<padStringCenter(e->getClearanceLevel(), 19)<<"|"<<std::endl;
         }
     }
+    std::cout<<std::string(82, '-')<<std::endl;
     return true; // assuming nothing fails
 }
 
 void EMap::loadAllRecords(std::fstream& inFile) { // assume offset 0
     int type;
     while(inFile.read((char*)&type, sizeof(int))) {
-        if(type == 0) loadEmployeeRecord(inFile);
+        // if(type == 0) loadEmployeeRecord(inFile);
         if(type == 1) loadWageRecord(inFile);
         if(type == 2) loadSalaryRecord(inFile);
     }
 }
 
-void EMap::loadEmployeeRecord(std::fstream& inFile) {
+// void EMap::loadEmployeeRecord(std::fstream& inFile) {
 
-}
+// }
 
 void EMap::loadWageRecord(std::fstream& inFile) {
     WagedEmployee we; bool active; long offset = inFile.tellp(); offset-=sizeof(int);
@@ -261,6 +269,69 @@ long EMap::gotoActiveVar(std::fstream& outFile, long offset) {
 
     // return where fstream now at "active" variable offset
     return outFile.tellg();
+}
+
+bool EMap::importEmployees(std::string fileName) {
+    std::fstream inFile(fileName, std::ios::in);
+    if(!inFile.is_open())
+        return false;
+    else {
+        int type;
+        while(inFile>>type) {
+            // if(type == 0) {
+            //     Employee e;
+            //     inFile>>e;
+            //     this->add_employee(e);
+            // } deprecated
+            if(type == 1) {
+                WagedEmployee we;
+                inFile>>we;
+                this->add_employee(we);
+            }
+            else if(type == 2) {
+                SalariedEmployee se;
+                inFile>>se;
+                this->add_employee(se);
+            }
+        }
+    }
+    return true;
+}
+
+bool EMap::exportEmployees(std::string exportFile) {
+    if(exportFile.length() <= 4 || exportFile == ".txt")
+        exportFile+=".txt";
+    else if(exportFile.substr(exportFile.length()-4, 4) != ".txt")
+        exportFile+=".txt"; // file must have .txt extension
+
+    // make sure that a file does not already exist
+    std::fstream exists(exportFile, std::ios::in);
+    if(exists.is_open()) // file exists
+        return false;
+    else {
+        exists.close();
+        exists.open(exportFile, std::ios::out);
+        std::fstream inFile(fileName, std::ios::in | std::ios::binary);
+        for(EMap::iterator it = this->begin(); it != this->end(); ++it) {
+            if(it->first != UINT_MAX) {
+                inFile.seekg(it->second);
+                int type;
+                inFile.read((char*)&type, sizeof(type));
+                
+                if(type == 1) {
+                    WagedEmployee we;
+                    inFile.read((char*)&we, sizeof(we));
+                    exists<<we;
+                }
+                else if(type == 2) {
+                    SalariedEmployee se;
+                    inFile.read((char*)&se, sizeof(se));
+                    exists<<se;
+                }
+            }
+        }
+    }
+    return true;
 }
 
 std::string EMap::padStringLeft(std::string text, int width) {

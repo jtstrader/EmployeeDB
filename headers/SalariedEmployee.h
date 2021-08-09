@@ -13,6 +13,9 @@ class SalariedEmployee : public Employee {
         // setters
         void setSalary(float salary);
 
+        // operator overloads
+        friend std::ostream& operator << (std::ostream&, SalariedEmployee&);
+        friend std::istream& operator >> (std::istream&, SalariedEmployee&);
 
     protected:
         float salary;

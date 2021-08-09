@@ -35,15 +35,15 @@ unsigned int Employee::getEmployeeAge() {
     return this->empdat.employee_age;
 }
 
-std::string Employee::getClearanceLevel() {
+std::string Employee::getEmployeeClearanceLevel() {
     return getClearance(this->empdat.employee_clearance);
 }
 
-std::string Employee::getPayGrade() {
+std::string Employee::getEmployeePayGrade() {
     return this->empdat.employee_pay_grade;
 }
 
-std::string Employee::getPayType() {
+std::string Employee::getEmployeePayType() {
     switch(this->emp_type) {
         case EMPLOYEE: return "EMPLOYEE";
         case WAGED: return "WAGED";
@@ -52,7 +52,7 @@ std::string Employee::getPayType() {
     }
 }
 
-int Employee::getPayTypeInt() {
+int Employee::getEmployeePayTypeInt() {
     return this->emp_type;
 }
 
@@ -73,15 +73,15 @@ void Employee::setEmployeeAge(unsigned int age) {
     this->empdat.employee_age = age;
 }
 
-void Employee::setClearanceLevel(CLEARANCE clearance) {
+void Employee::setEmployeeClearanceLevel(CLEARANCE clearance) {
     this->empdat.employee_clearance = clearance;
 }
 
-void Employee::setPayGrade(std::string payType) {
+void Employee::setEmployeePayGrade(std::string payType) {
     strncpy(this->empdat.employee_pay_grade, payType.c_str(), 4);
 }
 
-void Employee::setPayType(TYPE type) {
+void Employee::setEmployeePayType(TYPE type) {
     this->emp_type = type;
 }
 

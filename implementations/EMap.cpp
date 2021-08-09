@@ -1,5 +1,6 @@
 #include "../headers/EMap.h"
 
+// constructors //
 EMap::EMap() {
     
 }
@@ -15,7 +16,12 @@ EMap::EMap(const std::map<unsigned int, long>& old_map) {
 EMap::~EMap() {
 
 }
+//////////////////
 
+//// PUBLIC FUNCTIONS ////
+
+// tester function to print the map to check on current byte offsets
+// to ensure that saving is occuring properly.
 void EMap::printMap() {
     EMap::iterator it = this->begin();
     std::cout<<"----EMap----"<<std::endl;
@@ -24,10 +30,15 @@ void EMap::printMap() {
     }
 }
 
+// public function that is used to set the name of the binary file
+// for the database. Ideally grabbed from the command line or some
+// environmental variable.
 void EMap::setFileName(char* fileName) {
     this->fileName = fileName;
 }
 
+// public load function that is called to create the initial map
+// and initialize the db from the binary file.
 void EMap::load() {
     std::fstream load(fileName, std::ios::in | std::ios::binary);
     if(!load.is_open()) {
@@ -42,9 +53,13 @@ void EMap::load() {
     }
 }
 
+// add an employee to the map and binary file from 
+// user input from the client file. Will append to the end
+// if not deleted records are found, otherwise, it will 
+// overwrite a deleted record.
 bool EMap::add_employee(WagedEmployee& emp) {
 
-    int type = emp.getPayTypeInt();
+    int type = emp.getEmployeePayTypeInt();
     if(type != 1)
         return false;
 
@@ -82,9 +97,13 @@ bool EMap::add_employee(WagedEmployee& emp) {
     return true; // assume return true == OK status
 }
 
+// add an employee to the map and binary file from 
+// user input from the client file. Will append to the end
+// if not deleted records are found, otherwise, it will 
+// overwrite a deleted record.
 bool EMap::add_employee(SalariedEmployee& emp) {
 
-    int type = emp.getPayTypeInt();
+    int type = emp.getEmployeePayTypeInt();
     if(type != 2)
         return false;
 
@@ -121,6 +140,9 @@ bool EMap::add_employee(SalariedEmployee& emp) {
     return true; // assume return true == OK status
 }
 
+// deletes and employee by marking its space in the binary
+// file as "free" to be overwritten. The "active" boolean
+// variable must be set to false.
 bool EMap::delete_employee(unsigned int employee_id) {
     // set id to -1 and change bool handler to "false"
     std::fstream outFile(fileName, std::ios::in | std::ios::out | std::ios::binary);
@@ -146,6 +168,8 @@ bool EMap::delete_employee(unsigned int employee_id) {
     }
 }
 
+// calls on read_employee_print to print all employees
+// currently stored in the map
 bool EMap::read_employees_print() {
     for(EMap::iterator it=this->begin(); it!=this->end(); ++it) {
         if(it->first == UINT_MAX)
@@ -155,6 +179,9 @@ bool EMap::read_employees_print() {
     return true; // assuming nothing fails
 }
 
+// reads a single employee and prints in basic format.
+// polymorphs employee into Employee& objects and prints
+// them as such (will NOT have a wage/salary value)
 bool EMap::read_employee_print(unsigned int employee_id) {
     EMap::iterator it = this->find(employee_id);
     if(it == this->end())
@@ -183,7 +210,10 @@ bool EMap::read_employee_print(unsigned int employee_id) {
     return true;
 }
 
-bool EMap::read_employees_print_table() {
+// print the employee list in a table format. Can filter output using the
+// FilterType parameter for the type of filter applied and the filterCMP 
+// object to complete the comparison.
+bool EMap::read_employees_print_table(FilterType ftype, std::string filterCMP) {
     std::fstream inFile(fileName, std::ios::in | std::ios::binary);
     std::cout<<"|"<<padStringCenter("ID", 8)<<"|"<<padStringCenter("Employee Name", 25)<<"|"<<padStringCenter("Position", 25)<<"|"<<padStringCenter("Clearance Level", 19)<<"|"<<std::endl;
     std::cout<<std::string(82, '-')<<std::endl;
@@ -203,13 +233,20 @@ bool EMap::read_employees_print_table() {
                 inFile.read((char*)&se, sizeof(se));
                 e = &se;
             }
-            std::cout<<"|"<<padStringLeft(std::to_string(e->getEmployeeId()), 8)<<"|"<<padStringCenter(e->getEmployeeName(), 25)<<"|"<<padStringCenter(e->getEmployeePosition(), 25)<<"|"<<padStringCenter(e->getClearanceLevel(), 19)<<"|"<<std::endl;
+            if(filterItem(*e, ftype, filterCMP))
+                std::cout<<"|"<<padStringLeft(std::to_string(e->getEmployeeId()), 8)<<"|"<<padStringCenter(e->getEmployeeName(), 25)<<"|"<<padStringCenter(e->getEmployeePosition(), 25)<<"|"<<padStringCenter(e->getEmployeeClearanceLevel(), 19)<<"|"<<std::endl;
         }
     }
     std::cout<<std::string(82, '-')<<std::endl;
     return true; // assuming nothing fails
 }
 
+//// END PUBLIC FUNCTIONS ////
+
+//// PRIVATE FUNCTIONS ////
+
+// load all records from the binary file into the map.
+// use loadWageRecord() and loadSalaryRecord to complete this.
 void EMap::loadAllRecords(std::fstream& inFile) { // assume offset 0
     int type;
     while(inFile.read((char*)&type, sizeof(int))) {
@@ -219,10 +256,7 @@ void EMap::loadAllRecords(std::fstream& inFile) { // assume offset 0
     }
 }
 
-// void EMap::loadEmployeeRecord(std::fstream& inFile) {
-
-// }
-
+// load in a wage record into the map from the binary file
 void EMap::loadWageRecord(std::fstream& inFile) {
     WagedEmployee we; bool active; long offset = inFile.tellp(); offset-=sizeof(int);
     inFile.read((char*)&we, sizeof(we));
@@ -236,6 +270,7 @@ void EMap::loadWageRecord(std::fstream& inFile) {
         this->insert(std::pair<unsigned int, long>(UINT_MAX, offset));
 }
 
+// load in a salary record into the map from the binary file
 void EMap::loadSalaryRecord(std::fstream& inFile) {
     SalariedEmployee se; bool active; long offset = inFile.tellp(); offset-=sizeof(int);
     inFile.read((char*)&se, sizeof(se));
@@ -249,6 +284,10 @@ void EMap::loadSalaryRecord(std::fstream& inFile) {
         this->insert(std::pair<unsigned int, long>(UINT_MAX, offset));
 }
 
+// seeks to a given record in the fstream parameter and
+// grabs the type, the record itself, and then stops at
+// the offset where the active var is stored in the binary file.
+// This is for editing the active var if a record is deleted
 long EMap::gotoActiveVar(std::fstream& outFile, long offset) {
     outFile.seekg(offset);
     int type;
@@ -271,6 +310,8 @@ long EMap::gotoActiveVar(std::fstream& outFile, long offset) {
     return outFile.tellg();
 }
 
+// import employees to the binary file, inputted by the user.
+// returns false if the file is not found.
 bool EMap::importEmployees(std::string fileName) {
     std::fstream inFile(fileName, std::ios::in);
     if(!inFile.is_open())
@@ -298,6 +339,9 @@ bool EMap::importEmployees(std::string fileName) {
     return true;
 }
 
+// export employees to a file inputted by the user.
+// duplicate files are under no circumstance allowed.
+// returns false if the file already exists
 bool EMap::exportEmployees(std::string exportFile) {
     if(exportFile.length() <= 4 || exportFile == ".txt")
         exportFile+=".txt";
@@ -334,6 +378,8 @@ bool EMap::exportEmployees(std::string exportFile) {
     return true;
 }
 
+// pad strings to the left of a table column using a width value.
+// uses <iomanip> setw() to ensure that the spacing is maintained.
 std::string EMap::padStringLeft(std::string text, int width) {
     if(text.length() < width) {
         std::stringstream ss;
@@ -344,9 +390,26 @@ std::string EMap::padStringLeft(std::string text, int width) {
         return text;
 }
 
+// pad strings to the center of a table using a width value. 
+// uses <iomanip> setw() to ensure that the width of the string
+// is maintained no matter if the string has an odd or even length
 std::string EMap::padStringCenter(std::string text, int width) {
     std::string repeat = std::string((width-text.length()) / 2, ' ');
     std::stringstream ss;
     ss << std::setw(width) << repeat + text + repeat;
     return ss.str(); 
 }
+
+// filter items for the print_table function. return true if the item coincides with
+// the filterCmp (compare). If the item does not follow this, return false, which will
+// skip over printing the item in the print_table function
+bool EMap::filterItem(Employee& emp, FilterType ftype, std::string cmp) {
+    if(cmp == "") return true; // no comparison to make
+    else if(ftype == ID) return std::to_string(emp.getEmployeeId()) == cmp;
+    else if(ftype == NAME) return emp.getEmployeeName().find(cmp) != std::string::npos;
+    else if(ftype == AGE) return std::to_string(emp.getEmployeeAge()) == cmp;
+    else if(ftype == GRADE) return emp.getEmployeePayGrade() == cmp;
+    else if(ftype == CLEARANCE_LEVEL) return emp.getEmployeeClearanceLevel() == cmp;
+}
+
+//// END PRIVATE FUNCTIONS ////

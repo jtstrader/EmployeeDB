@@ -27,8 +27,8 @@ std::ostream& operator << (std::ostream& stream, SalariedEmployee& emp) {
             emp.getEmployeeName() << std::endl <<
             emp.getEmployeePosition() << std::endl <<
             emp.getEmployeeAge() << std::endl <<
-            emp.getClearanceLevel() << std::endl <<
-            emp.getPayGrade() << std::endl <<
+            emp.getEmployeeClearanceLevel() << std::endl <<
+            emp.getEmployeePayGrade() << std::endl <<
             emp.getSalary() << std::endl << std::endl);
 }
 

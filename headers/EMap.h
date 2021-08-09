@@ -22,6 +22,7 @@
 // any free space in the file can be determined by setting a
 // UINT_MAX key value to a certain record offset that is now populated
 
+enum FilterType{ID, NAME, POSITION, AGE, GRADE, CLEARANCE_LEVEL};
 class EMap : std::multimap<unsigned int, long> {
     public:
         EMap();
@@ -36,7 +37,7 @@ class EMap : std::multimap<unsigned int, long> {
 
         bool read_employee_print(unsigned int employee_id);
         bool read_employees_print(); // read all employees and print them
-        bool read_employees_print_table(); // raed all employees and print them in table format
+        bool read_employees_print_table(FilterType filter = ID, std::string filterCMP = ""); // raed all employees and print them in table format
 
         // setup & testing
         void printMap();
@@ -54,12 +55,12 @@ class EMap : std::multimap<unsigned int, long> {
 
         WagedEmployee readWagedEmployee(std::fstream& inFile);
         SalariedEmployee readSalariedEmployee(std::fstream& inFile);
-
         long gotoActiveVar(std::fstream&, long offset);
+        bool filterItem(Employee& emp, FilterType ftype, std::string cmp);
+
 
         std::string padStringLeft(std::string text, int amt);
         std::string padStringCenter(std::string text, int width);
-
         
         char* fileName;
         int currMaxId = 0;

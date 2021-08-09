@@ -190,8 +190,8 @@ void createEmployee(EMap& em) {
 
         WagedEmployee we;
         we.setEmployeeName(name); we.setEmployeePosition(position);
-        we.setEmployeeAge(age); we.setPayGrade(grade);
-        we.setClearanceLevel((CLEARANCE)clearance); we.setWage(payF); 
+        we.setEmployeeAge(age); we.setEmployeePayGrade(grade);
+        we.setEmployeeClearanceLevel((CLEARANCE)clearance); we.setWage(payF); 
         em.add_employee(we);
     }
 
@@ -214,8 +214,8 @@ void createEmployee(EMap& em) {
 
         SalariedEmployee se;
         se.setEmployeeName(name); se.setEmployeePosition(position);
-        se.setEmployeeAge(age); se.setPayGrade(grade);
-        se.setClearanceLevel((CLEARANCE)clearance); se.setSalary(payF);
+        se.setEmployeeAge(age); se.setEmployeePayGrade(grade);
+        se.setEmployeeClearanceLevel((CLEARANCE)clearance); se.setSalary(payF);
         em.add_employee(se);
     }
 }

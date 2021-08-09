@@ -66,13 +66,14 @@ bool EMap::add_employee(WagedEmployee& emp) {
     // add new data to temporary employee list
     std::fstream outFile(fileName, std::ios::in | std::ios::out | std::ios::binary);
     if(emp.getEmployeeId() == -1) {
-        emp.setEmployeeId(this->currMaxId+1);
+        while(this->find(currMaxId) != this->end()) this->currMaxId++;
+        emp.setEmployeeId(this->currMaxId);
         this->currMaxId++;
     }
     
     if(this->find(emp.getEmployeeId()) != this->end()) {
         std::cout<<"EMap Error: duplicate non-UINT_MAX key. Exiting add_employee..."<<std::endl;
-        currMaxId--;
+        this->currMaxId--;
         return false;
     }
 
@@ -102,7 +103,6 @@ bool EMap::add_employee(WagedEmployee& emp) {
 // if not deleted records are found, otherwise, it will 
 // overwrite a deleted record.
 bool EMap::add_employee(SalariedEmployee& emp) {
-
     int type = emp.getEmployeePayTypeInt();
     if(type != 2)
         return false;
@@ -110,12 +110,13 @@ bool EMap::add_employee(SalariedEmployee& emp) {
     // add new data to temporary employee list
     std::fstream outFile(fileName, std::ios::in | std::ios::out | std::ios::binary);
     if(emp.getEmployeeId() == -1) {
-        emp.setEmployeeId(this->currMaxId+1);
-        currMaxId++;
+        while(this->find(currMaxId) != this->end()) this->currMaxId++;
+        emp.setEmployeeId(this->currMaxId);
+        this->currMaxId++;
     }
     if(this->find(emp.getEmployeeId()) != this->end()) {
         std::cout<<"EMap Error: duplicate non-UINT_MAX key. Exiting add_employee..."<<std::endl;
-        currMaxId--;
+        this->currMaxId--;
         return false;
     }
 

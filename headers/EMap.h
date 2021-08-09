@@ -18,7 +18,7 @@
 // database or if the employee can be overwritten.
 //
 // If an employee can be be overritten, the byte offset
-// is stored but the key value is set to -1, meaning that
+// is stored but the key value is set to UINT_MAX, meaning that
 // any free space in the file can be determined by setting a
 // UINT_MAX key value to a certain record offset that is now populated
 

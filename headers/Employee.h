@@ -17,7 +17,8 @@ struct EmployeeData {
     CLEARANCE employee_clearance;
 };
 
-
+// inherited by the SalariedEmployee and WagedEmployee classes to add on
+// funtionality with their respective pay types
 class Employee {
     public:
         Employee();

@@ -172,13 +172,14 @@ void createEmployee(EMap& em) {
     // waged employee
     if(option == '1') {
         // hourly wages
+        float payF = 0;
         do {
             std::cout<<"- Enter the employee's hourly wage (Enter -1 to Exit): ";
             getline(std::cin, payS);
             if(payS.substr(0, 2) == "-1")
                 return;
             try {
-                float payF = std::stof(payS);
+                payF = std::stof(payS);
                 break;
             }
             catch(const std::invalid_argument& e) {
@@ -196,13 +197,14 @@ void createEmployee(EMap& em) {
     // salaried employee
     else {
         // yearly salary
+        float payF = 0;
         do {
             std::cout<<"- Enter the employee's yearly salary (Enter -1 to Exit): ";
             getline(std::cin, payS);
             if(payS.substr(0, 2) == "-1")
                 return;
             try {
-                float payF = std::stof(payS);
+                payF = std::stof(payS);
                 break;
             }
             catch(const std::invalid_argument& e) {
@@ -278,7 +280,7 @@ void importEmployees(EMap& em) {
             if(em.importEmployees(input)) // try to read in file
                 return;
             else
-                std::cout<<"\nERR: File could not be opened. Please insert a valid file name."<<std::endl;
+                std::cout<<"\nERR: File could not be opened. Please insert a valid file name."<<std::endl<<std::endl;
         }
     }   
 }
@@ -291,15 +293,15 @@ void exportEmployees(EMap& em) {
         std::cout<<"Input the .txt file you wish to write out to. Make sure the file does not already exist! (Enter -1 to Exit): ";
         getline(std::cin, input);
         if(input == "") {
-            std::cout<<"\nERR: File cannot have no name! Please define a name for your file."<<std::endl<<std::endl;
+            std::cout<<"\nERR: File must have a name! Please define a name for your file."<<std::endl<<std::endl;
         }
-        if(input.substr(0, 2) == "-1")
+        else if(input.substr(0, 2) == "-1")
             return;
         else {
             if(em.exportEmployees(input)) // try to export
                 return;
             else
-                std::cout<<"\nERR: File already exists! Please use a file name for a file that does not exist."<<std::endl;
+                std::cout<<"\nERR: File already exists! Please use a file name for a file that does not exist."<<std::endl<<std::endl;
         }
     }
 }

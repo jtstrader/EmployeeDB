@@ -18,7 +18,7 @@ Employee::~Employee() {
 
 }
 
-// getters //
+//// GETTERS ////
 std::string Employee::getEmployeeName() {
     return this->empdat.employee_name;
 }
@@ -55,8 +55,9 @@ std::string Employee::getEmployeePayType() {
 int Employee::getEmployeePayTypeInt() {
     return this->emp_type;
 }
+//// END GETTERS ////
 
-// setters //
+//// SETTERS ////
 void Employee::setEmployeeName(std::string emp_name) {
     strncpy(this->empdat.employee_name, emp_name.c_str(), 49);
     this->empdat.employee_name[49] = '\0';
@@ -87,8 +88,9 @@ void Employee::setEmployeePayGrade(std::string payType) {
 void Employee::setEmployeePayType(TYPE type) {
     this->emp_type = type;
 }
+//// END SETTERS ////
 
-// operators
+//// OPERATORS ////
 std::ostream& operator << (std::ostream& stream, const Employee& emp) {
     const EmployeeData* ed = &(emp.empdat);
     stream<<"---------------------------------------------\n";
@@ -105,8 +107,8 @@ std::istream& operator >> (std::istream& stream, Employee& emp) {
     std::string burn;
     stream>>emp.empdat.employee_id; 
     getline(stream, burn);
-    getline(stream, burn); strncpy(emp.empdat.employee_name, burn.c_str(), 50);
-    getline(stream, burn); strncpy(emp.empdat.employee_position, burn.c_str(), 50);
+    getline(stream, burn); strncpy(emp.empdat.employee_name, burn.c_str(), 49); emp.empdat.employee_name[49] = '\0'; 
+    getline(stream, burn); strncpy(emp.empdat.employee_position, burn.c_str(), 49); emp.empdat.employee_position[49] = '\0';
     stream>>emp.empdat.employee_age; getline(stream, burn);
     getline(stream, burn);
 
@@ -116,11 +118,11 @@ std::istream& operator >> (std::istream& stream, Employee& emp) {
         emp.empdat.employee_clearance = CONFIDENTIAL;
     else if(burn == "SECRET")
         emp.empdat.employee_clearance = SECRET;
-    else if(burn == "TOP_SECRET")
+    else if(burn == "TOP SECRET")
         emp.empdat.employee_clearance = TOP_SECRET;
     else
         emp.empdat.employee_clearance = NONE;
-    getline(stream, burn); strncpy(emp.empdat.employee_pay_grade, burn.c_str(), 4);
+    getline(stream, burn); strncpy(emp.empdat.employee_pay_grade, burn.c_str(), 4); emp.empdat.employee_pay_grade[4] = '\0';
     return stream;
 }
 
@@ -147,8 +149,11 @@ bool operator == (const Employee& e1, const Employee& e2) {
 bool operator != (const Employee& e1, const Employee& e2) {
     return e1.empdat.employee_id != e2.empdat.employee_id;
 }
+//// END OPERATORS
 
-// private functions //
+//// PRIVATE FUNCTIONS ////
+
+// format a specific key/value pair for a Employee card
 std::string Employee::formatOut(std::string key, std::string value) const {
     // size of card == 45 characters
     //   - 2 dedicated spaces to side bars
@@ -160,6 +165,7 @@ std::string Employee::formatOut(std::string key, std::string value) const {
     return out;
 }
 
+// format a name/position string to specifically have no more than 26 characters
 std::string Employee::formatCA25(std::string ca) const {
     if(ca.length() >= 27)
         return (ca.substr(0, 23)) + "...";
@@ -167,6 +173,7 @@ std::string Employee::formatCA25(std::string ca) const {
         return ca;
 }
 
+// returns the string representation of the clearance enum
 std::string Employee::getClearance(CLEARANCE clearance) const {
     switch(clearance) {
         case NONE:
@@ -181,3 +188,4 @@ std::string Employee::getClearance(CLEARANCE clearance) const {
             return "NOT DEFINED";
     }
 }
+//// END PRIVATE FUNCTIONS ////

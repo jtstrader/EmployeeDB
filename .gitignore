@@ -4,5 +4,9 @@
 .vscode/
 *.o
 
+# database storage
+db/*
+#!db/.empdblog.txt
+
 # testing file
 empdi

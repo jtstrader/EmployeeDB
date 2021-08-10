@@ -10,6 +10,7 @@
 #include "WagedEmployee.h"
 #include "SalariedEmployee.h"
 
+enum FilterType{ID, NAME, POSITION, AGE, GRADE, CLEARANCE_LEVEL, NOF};
 
 // Employee Map class that handles all i/o operations
 // with files concerning Employee objects. Note that
@@ -20,9 +21,7 @@
 // If an employee can be be overritten, the byte offset
 // is stored but the key value is set to UINT_MAX, meaning that
 // any free space in the file can be determined by setting a
-// UINT_MAX key value to a certain record offset that is now populated
-
-enum FilterType{ID, NAME, POSITION, AGE, GRADE, CLEARANCE_LEVEL, NOF};
+// UINT_MAX key value to a certain record offset that is now populated.
 class EMap : std::multimap<unsigned int, long> {
     public:
         EMap();

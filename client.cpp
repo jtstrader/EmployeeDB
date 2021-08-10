@@ -3,16 +3,18 @@
 #include "./headers/SalariedEmployee.h"
 #include "./headers/WagedEmployee.h"
 #include "./headers/EMap.h"
+#include "./headers/DatabaseManager.h"
 
 // menus
 void dbSelect();
-void dbMenu(std::string db_name);
+void dbMenu(EMap& em, std::string db_name);
 
 // db select menu switch functions
 char dbSelectOption();
-std::string createdb();
-std::string deletedb(std::string currdb_name);
-std::string connectdb();
+bool createdb(DatabaseManager& dbm);
+void listdbs(DatabaseManager& dbm);
+bool deletedb(DatabaseManager& dbm);
+std::string connectdb(DatabaseManager& dbm);
 
 // main menu switch functions
 char dbMenuOptions(std::string& db_name);
@@ -32,12 +34,164 @@ FilterType getFilterType();
 std::string getFilterCMP(FilterType ftype);
 
 int main(int argc, char** argv) {
-    EMap em; // main Employee Map
-    bool connected = false;
-    std::string db_name = "JCORP";
-
     dbSelect(); // main function to select, delete, and/or add databases. all functions are run within this method.
+    return 0;
+}
 
+//// DATABASE SELECTOR FUNCTIONS ////
+
+// highest order menu for selecting databases
+void dbSelect() {
+    DatabaseManager dbm; char option;
+    do {
+        option = dbSelectOption();
+        std::string connected = "";
+        switch(option) {
+            case 'a': createdb(dbm); break;
+            case 'b': listdbs(dbm); break;
+            case 'c': connected = connectdb(dbm); break;
+            case 'd': deletedb(dbm); break;
+            case 'x': break;
+            default:
+                std::cerr<<"Invalid command. Please try again."<<std::endl<<std::endl;
+                break;
+        }
+        if(connected != "") {
+            // database locked on, start db menu
+            EMap em; em.setFileName(dbm.getDB_NAME_WITH_PATH()); em.load();
+            dbMenu(em, dbm.getDB_NAME_NO_PATH());
+        }
+    } while(option != 'x');
+}
+
+char dbSelectOption() {
+    std::cout<<smartCenterHeader("DATABASE MANAGEMENT SYSTEM", 42);
+    std::cout<<"* a. Create New Database                 *\n";
+    std::cout<<"* b. List Current Databases              *\n";
+    std::cout<<"* c. Connect To A Database               *\n";
+    std::cout<<"* d. Delete A Database                   *\n";
+    std::cout<<"* x. Exit                                *\n";
+    std::cout<<"******************************************\n\n";
+    std::cout<<"Enter an option: ";
+    std::string input; getline(std::cin, input);
+    return input[0];
+}
+
+// create a database. If a valid name is input into the system,
+// a database file will be created in the db/ directory and
+// used for initialization later (in the connect() method)
+bool createdb(DatabaseManager& dbm) {
+    std::string input;
+    while(true) {
+        std::cout<<"Enter the name of your new database. Spaces and special characters are not allowed. Must be under 50 characters. (Enter -1 to Exit): ";
+        getline(std::cin, input);
+        if(input == "") {
+            std::cout<<"\nERR: You cannot create a file with an empty name! Please input a valid database name."<<std::endl<<std::endl;
+            continue;
+        }
+        if(input.substr(0, 2) == "-1")
+            break;
+        else {
+            int code = dbm.createdb(input);
+            if(code == 1)
+                return true;
+            else if(code == -1) {
+                std::cout<<"\nERR: Your database name has invalid characters. Please only use A-Z, a-z, and NO SPACES."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -2) {
+                std::cout<<"\nERR: Your database name is over 50 characters long! Please limit the name to 50 characters or less."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -3) {
+                std::cout<<"\nERR: A database with that name already exists. Please enter a different name."<<std::endl<<std::endl;
+                continue;
+            }
+        }
+    }
+    return false;
+}
+
+void listdbs(DatabaseManager& dbm) {
+    dbm.listDatabases();
+}
+
+bool deletedb(DatabaseManager& dbm) {
+    while(true) {
+        std::string input;
+        dbm.listDatabases();
+        std::cout<<"- Enter a database name to delete (Enter -1 to Exit): ";
+        getline(std::cin, input);
+        if(input.substr(0, 2) == "-1")
+            break;
+        else if(input == "") {
+            std::cout<<"\nERR: You cannot delete a database with no name! Please enter an existing database."<<std::endl<<std::endl;
+            continue;
+        }
+        else {
+            int code= dbm.deletedb(input);
+            if(code == 1)
+                return true;
+            else if(code == -1) {
+                std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -2) {
+                std::cout<<"\nWARN: Log file empty. No database has been initialized. Exiting initialization section..."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -3) {
+                std::cout<<"\nERR: That database name has invalid characters. Please only use A-Z, a-z, and NO SPACES."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -4) {
+                std::cout<<"\nERR: That database could not be found. Please input an existing database to delete."<<std::endl<<std::endl;
+                continue;
+            }
+        }
+    }
+    return false;
+}
+
+// connect to a database
+std::string connectdb(DatabaseManager& dbm) {
+    while(true) {
+        std::string input;
+        dbm.listDatabases();
+        std::cout<<"- Enter a database name to connect (Enter -1 to Exit): ";
+        getline(std::cin, input);
+        if(input.substr(0, 2) == "-1")
+            break;
+        else if(input == "") {
+            std::cout<<"\nERR: You cannot connect to a database with no name! Please enter an existing database."<<std::endl<<std::endl;
+            continue;
+        }
+        else {
+            int code = dbm.connectdb(input);
+            if(code == 1)
+                return input;
+            else if(code == -1) {
+                std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -2) {
+                std::cout<<"\nWARN: Log file empty. No database has been initialized. Exiting initialization section..."<<std::endl<<std::endl;
+                continue;
+            }
+            else if(code == -3) {
+                std::cout<<"\nERR: Database '"<<input<<"' does not exist. Please enter an existing database."<<std::endl<<std::endl;
+                continue;
+            }
+        }
+    }
+    return "";
+}
+
+//// END DATABASE SELECTOR FUNCTIONS ////
+
+
+//// DATABASE SPECIFIC FUNCTIONS ////
+void dbMenu(EMap& em, std::string db_name) {
     char option;
     do {
         option = dbMenuOptions(db_name);
@@ -49,8 +203,6 @@ int main(int argc, char** argv) {
             case 'f': exportEmployees(em); break;
             case 'x': break;
 
-
-            
             // testing/utilities
             case 'm':
                 em.printMap();
@@ -60,8 +212,6 @@ int main(int argc, char** argv) {
                 break;
         }
     } while(option != 'x');
-
-    return 0;
 }
 
 // main menu returns a single char to be read by switch in main function
@@ -80,6 +230,7 @@ char dbMenuOptions(std::string& db_name) {
     return input[0];
 }
 
+// center the header of a text block with the * character
 std::string smartCenterHeader(std::string db_name, int width) {
     return db_name.length() % 2 == 0
     ?(std::string((width-db_name.length())/2, '*')+db_name+std::string((width-db_name.length())/2, '*')+'\n')
@@ -343,8 +494,6 @@ void exportEmployees(EMap& em) {
     }
 }
 
-// utilities //
-
 // get the FilterType to be used by the listEmployees() function
 // the FilterType is also needed to determine the formatting for the 
 // getFilterCMP() function
@@ -491,184 +640,4 @@ std::string getFilterCMP(FilterType ftype) {
     }
     return "";
 }
-
-// check if a string has non A-Z a-z characters (for creating databases)
-bool findInvalid(std::string input) {
-    for(char c : input) {
-        if(!((c >= 'A' && c <= 'Z')||(c >= 'a' && c <= 'z')))
-            return true;
-    }
-    return false;
-}
-
-// initialize a database to start up the main program. This can only
-// be run properly once, once a database has been a initialized only
-// switchdb() can be run
-std::string initdb() {
-    std::string input;
-    while(true) {
-        std::cout<<"- Select An Option -"<<std::endl;
-        std::cout<<"  1. Create New Database"<<std::endl;
-        std::cout<<"  2. Initialize An Exiting Database"<<std::endl;
-        std::cout<<"- Enter your option (Enter -1 to Exit): ";
-        getline(std::cin, input);
-        if(input.substr(0, 2) == "-1")
-            return "";
-        else if(input != "1" && input != "2") {
-            std::cout<<"\nERR: Please enter a valid option, or -1 to exit."<<std::endl<<std::endl;
-            continue;
-        }
-
-        // CREATE NEW DATABASE
-        if(input == "1") {
-            while(true) {
-                std::cout<<"Enter the name of your new database. Spaces and special characters are not allowed. (Enter -1 to Exit): ";
-                getline(std::cin, input);
-                if(input == "") {
-                    std::cout<<"\nERR: You cannot create a file with an empty name! Please input a valid database name."<<std::endl<<std::endl;
-                    continue;
-                }
-                if(input.substr(0, 2) == "-1")
-                    break;
-
-                // check for invalid characters
-                if(findInvalid(input)) {
-                    std::cout<<"\nERR: Your database name has invalid characters. Please only use A-Z, a-z, and NO SPACES."<<std::endl<<std::endl;
-                    continue;
-                }
-                else {
-                    // confirm file does not already exist
-                    std::fstream exists("db/"+input, std::ios::in);
-                    if(exists.is_open()) {
-                        std::cout<<"\nERR: Database 'db/"<<input<<"' already exists. Please use another name."<<std::endl<<std::endl;
-                        exists.close();
-                        continue;
-                    }
-                    else {
-                        exists.close();
-                        appendToLog("db/"+input);
-                        return input; // file does not exist and has valid characters, database can be created by EMap::load()
-                    }
-                }
-            }
-        }
-
-        // INITIALIZE CURRENTLY EXISTING DATABASE
-        else if(input == "2") {
-            if(!checkLogStatus()) {
-                std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
-                continue;
-            }
-
-            std::fstream log("db/.empdblog.txt", std::ios::in);
-            std::map<unsigned int, std::string> fileList; std::string input; int count = 1;
-            while(getline(log, input)) fileList[count++] = input;
-
-            // no databases in log file
-            if(fileList.size() == 0) {
-                std::cout<<"\nWARN: Log file empty. No database has been initialized. Exiting initialization section..."<<std::endl<<std::endl;
-                continue;
-            }
-            
-            while(true) {
-                // otherwise, create menu and ask for which file the user wants to open. should be able to use map to create this relation
-                std::cout<<"---- SELECT DATABASE ----"<<std::endl;
-                for(std::map<unsigned int, std::string>::iterator it = fileList.begin(); it != fileList.end(); ++it)
-                    std::cout<<it->first<<". "<<it->second<<std::endl;
-                std::cout<<"- Select a database (Enter -1 to Exit): ";
-                getline(std::cin, input);
-                if(input.substr(0, 2) == "-1")
-                    break;
-                try {
-                    unsigned int item = std::stoul(input);
-                    if(fileList.find(item) == fileList.end()) {
-                        std::cout<<"\nERR: That ID does not exist. Please enter an existing ID."<<std::endl<<std::endl;
-                        continue;
-                    }
-                    // finally, initialize a db by returning value
-                    return fileList[item].substr(3);
-                }
-                catch(const std::invalid_argument& e) {
-                    std::cout<<"\nERR: Please enter a valid number."<<std::endl<<std::endl;
-                    continue;
-                }
-            }
-        }           
-    }
-}
-
-// switch to a separate database stored in the database logs (db/ directory)
-// this can only be run after a database has been initialized first
-std::string switchdb(std::string currdb_name) {
-    if(!checkLogStatus()) { // security purposes, should never run but in case something breaks
-        std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
-        return currdb_name;
-    }
-
-    std::fstream log("db/.empdblog.txt", std::ios::in);
-    std::map<unsigned int, std::string> fileList; std::string input; int count = 1;
-    while(getline(log, input)) {
-        if(input != ("db/"+currdb_name))
-            fileList[count++] = input;
-    }
-
-    // no databases in log file
-    if(fileList.size() == 0) {
-        std::cout<<"\nWARN: Log file empty. No database has been initialized. Exiting initialization section..."<<std::endl<<std::endl;
-        return currdb_name;
-    }
-    
-    while(true) {
-        // otherwise, create menu and ask for which file the user wants to open. should be able to use map to create this relation
-        std::cout<<"---- SELECT DATABASE ----"<<std::endl;
-        for(std::map<unsigned int, std::string>::iterator it = fileList.begin(); it != fileList.end(); ++it)
-            std::cout<<it->first<<". "<<it->second<<std::endl;
-        std::cout<<"- Select a database (Enter -1 to Exit): ";
-        getline(std::cin, input);
-        if(input.substr(0, 2) == "-1")
-            break;
-        try {
-            unsigned int item = std::stoul(input);
-            if(fileList.find(item) == fileList.end()) {
-                std::cout<<"\nERR: That ID does not exist. Please enter an existing ID."<<std::endl<<std::endl;
-                continue;
-            }
-            // finally, initialize a db by returning value
-            return fileList[item].substr(3);
-        }
-        catch(const std::invalid_argument& e) {
-            std::cout<<"\nERR: Please enter a valid number."<<std::endl<<std::endl;
-            continue;
-        }
-    }
-    return currdb_name;
-}
-
-// check the status of the log file to ensure it exists
-bool checkLogStatus() {
-    std::fstream log("db/.empdblog.txt", std::ios::in);
-    if(!log.is_open()) {
-        std::cout<<"\nWARN: Log file not created. No database has been initialized. Creating log file now..."<<std::endl<<std::endl;
-        log.close();
-        log.open("db/.empdblog.txt", std::ios::out);
-        log.close(); // log file created
-        return false;
-    }
-    log.close();
-    return true;
-}
-
-// append a new database name to the log file
-void appendToLog(std::string newdb_name) {
-    std::cout<<"appending new name: "<<newdb_name<<std::endl;
-    checkLogStatus(); // create log if log file not already created
-    std::fstream log("db/.empdblog.txt", std::ios::in | std::ios::out); // open in in/out to avoid truncating data!!!
-    log.seekp(0, std::ios::end);
-    log<<newdb_name<<std::endl;
-    log.close();
-}
-
-// connect to a database
-bool connect(std::string db_name) {
-
-}
+//// END DATABASE SPECIFIC FUNCTIONS ////

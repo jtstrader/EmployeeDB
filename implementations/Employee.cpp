@@ -151,7 +151,7 @@ bool operator != (const Employee& e1, const Employee& e2) {
 }
 //// END OPERATORS
 
-//// PRIVATE FUNCTIONS ////
+//// PROTECTED FUNCTIONS ////
 
 // format a specific key/value pair for a Employee card
 std::string Employee::formatOut(std::string key, std::string value) const {
@@ -188,4 +188,10 @@ std::string Employee::getClearance(CLEARANCE clearance) const {
             return "NOT DEFINED";
     }
 }
-//// END PRIVATE FUNCTIONS ////
+
+std::string Employee::formatPay(float pay) const {
+    std::stringstream ss;
+    ss<<std::fixed<<std::setprecision(2)<<pay;
+    return ss.str();
+}
+//// END PROTECTED FUNCTIONS ////

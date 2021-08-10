@@ -19,6 +19,9 @@ class WagedEmployee : public Employee {
         // operator overloads
         friend std::ostream& operator << (std::ostream&, WagedEmployee&);
         friend std::istream& operator >> (std::istream&, WagedEmployee&);
+
+        // pretty print
+        std::string pprint();
     
     protected:
         float wage;

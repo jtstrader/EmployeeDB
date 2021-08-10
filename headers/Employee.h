@@ -2,6 +2,8 @@
 #include<iostream>
 #include<cstdlib>
 #include<cstring>
+#include<iomanip>
+#include<sstream>
 
 
 typedef char String[50];
@@ -62,4 +64,5 @@ class Employee {
         std::string formatOut(std::string key, std::string value) const;
         std::string formatCA25(std::string ca) const;
         std::string getClearance(CLEARANCE clearance) const;
+        std::string formatPay(float pay) const;
 };

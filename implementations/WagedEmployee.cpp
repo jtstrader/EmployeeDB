@@ -77,3 +77,17 @@ std::istream& operator >> (std::istream& stream, WagedEmployee& emp) {
     return stream;
 }
 //// END OPERATORS ////
+
+std::string WagedEmployee::pprint() {
+    std::stringstream ss;
+    ss<<std::string(10, '*')<<"SALARIED EMPLOYEE"<<std::string(10, '*')<<std::endl;
+    ss<<"* "<<"Employee ID: "<<std::setw(20)<<this->getEmployeeId()<<" *"<<std::endl;
+    ss<<"* "<<"Name: "<<std::setw(27)<<Employee::formatCA25(this->getEmployeeName())<<" *"<<std::endl;
+    ss<<"* "<<"Age: "<<std::setw(28)<<this->getEmployeeAge()<<" *"<<std::endl;
+    ss<<"* "<<"Position: "<<std::setw(23)<<this->getEmployeePosition()<<" *"<<std::endl;
+    ss<<"* "<<"Pay Grade: "<<std::setw(22)<<this->getEmployeePayGrade()<<" *"<<std::endl;
+    ss<<"* "<<"Wage: "<<std::setw(27)<<("$"+Employee::formatPay(this->getWage()))<<" *"<<std::endl;
+    ss<<"* "<<"Clearance: "<<std::setw(22)<<this->getEmployeeClearanceLevel()<<" *"<<std::endl;
+    ss<<std::string(37, '*');
+    return ss.str();
+}

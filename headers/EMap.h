@@ -37,11 +37,13 @@ class EMap : std::multimap<unsigned int, long> {
 
         bool read_employee_print(unsigned int employee_id);
         bool read_employees_print(); // read all employees and print them
+        bool read_employee_record(unsigned int employee_id); // read in specific employee record
+
         bool read_employees_print_table(FilterType filter = ID, std::string filterCMP = ""); // raed all employees and print them in table format
 
         // setup & testing
         void printMap();
-        void setFileName(char* fileName);
+        void setFileName(std::string);
         void load();
 
         bool importEmployees(std::string fileName);
@@ -53,8 +55,8 @@ class EMap : std::multimap<unsigned int, long> {
         void loadWageRecord(std::fstream& inFile);
         void loadSalaryRecord(std::fstream& inFile);
 
-        WagedEmployee readWagedEmployee(std::fstream& inFile);
-        SalariedEmployee readSalariedEmployee(std::fstream& inFile);
+        // WagedEmployee readWagedEmployee(std::fstream& inFile);
+        // SalariedEmployee readSalariedEmployee(std::fstream& inFile);
         long gotoActiveVar(std::fstream&, long offset);
         bool filterItem(Employee& emp, FilterType ftype, std::string cmp);
 
@@ -62,6 +64,6 @@ class EMap : std::multimap<unsigned int, long> {
         std::string padStringLeft(std::string text, int amt);
         std::string padStringCenter(std::string text, int width);
         
-        char* fileName;
+        std::string fileName;
         int currMaxId = 0;
 };

@@ -212,6 +212,8 @@ bool EMap::read_employee_print(unsigned int employee_id) {
     return true;
 }
 
+// read an employee record and use the pprint() function to 
+// format the printing of the record
 bool EMap::read_employee_record(unsigned int employee_id) {
     if(employee_id == UINT_MAX) return false;
     

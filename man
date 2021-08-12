@@ -1,0 +1,22 @@
+NAME
+^^^^
+EmployeeDB - Employee Database (w/ DatabaseManager and EMap std::multimap extensions)
+
+SYNOPSIS
+^^^^^^^^
+./EmployeeDB.exe
+./EmployeeDB.exe -d PATH
+./EmployeeDB.exe -l FILE
+./EmployeeDB.exe -d PATH -l FILE
+
+DESCRIPTION
+^^^^^^^^^^^
+EmployeeDB is a C++17 program built to mimic a database structure instead using binary files built upon binary search trees (through the usage of multimaps). EmployeeDB has two extensions of std::multimap to fulfill its purpose: DatabaseManager and EMap. DatabaseManager is the class designed to maintain the various databases that a user can create. EMap (Employee Map) is the class designed to maintain the various employees that a user can create in each database. Both of these classes work separately to maintain the database structure to mimic a "server" that can contain multiple databases each with their own data.
+
+OPTIONS
+^^^^^^^
+-d, --ddrp
+Define the database directory relative path (DDRP) that databases are stored in. The path is suggested to be relative but can be made absolute as well if so desired. Defaults to "db/"
+
+-l, --log
+Define the physical name of the log file that is used to store database information. Do not use the path, only the literal file name. Defaults to ".empdblog.bin"

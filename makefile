@@ -1,9 +1,10 @@
 CC=--std=c++17
+FS=-lstdc++fs
 
 all: client clean
 
 client: client.cpp SalariedEmployee.o WagedEmployee.o Employee.o EMap.o DatabaseManager.o
-	c++ $(CC) -o EmployeeDB.exe client.cpp SalariedEmployee.o WagedEmployee.o Employee.o EMap.o DatabaseManager.o
+	c++ $(CC) -o EmployeeDB.exe client.cpp SalariedEmployee.o WagedEmployee.o Employee.o EMap.o DatabaseManager.o $(FS)
 
 Employee.o: ./headers/Employee.h ./implementations/Employee.cpp
 	c++ $(CC) -c ./implementations/Employee.cpp

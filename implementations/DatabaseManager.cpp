@@ -2,8 +2,17 @@
 
 DatabaseManager::DatabaseManager() {
     this->db_name = "";
-    this->path = "db/";
-    this->logfile = ".empdblog.dat";
+    this->verifyCacheIntegritySilent();
+    this->readDBMCacheData();
+    this->connected = false;
+    this->initLogMap();
+}
+
+DatabaseManager::DatabaseManager(std::string ddrp, std::string log) {
+    this->db_name = "";
+    this->path = ddrp;
+    this->logfile = this->fixLogExtension(log);
+    this->cacheDBMInfo();
     this->connected = false;
     this->initLogMap();
 }
@@ -59,7 +68,7 @@ int DatabaseManager::createdb(std::string db_name) {
 // characters to empty strings (essentially removing the line from the file)
 // then remove the file entirely from the file system using the remove() function
 int DatabaseManager::deletedb(std::string db_name) {
-    if(!this->checkLogStatus())
+    if(!this->verifyLogIntegrity())
         return -1;
 
     // no databases in log file
@@ -93,7 +102,7 @@ int DatabaseManager::deletedb(std::string db_name) {
 
 // connect to a database
 int DatabaseManager::connectdb(std::string db_name) {
-    if(!this->checkLogStatus())
+    if(!this->verifyLogIntegrity())
         return -1;
 
     // no databases in log file
@@ -105,16 +114,64 @@ int DatabaseManager::connectdb(std::string db_name) {
         return -3;
     // finally, initialize a db by returning value
     this->db_name = db_name;
-    this->verifyDatabaseIntegrity(db_name); // guarantee that file is not corrupted/deleted
+    this->verifyDatabaseIntegritySilent(db_name); // guarantee that file is not corrupted/deleted
     return true;
 }
 //// END OF CDC FUNCTIONS ////
 
 //// UTILITIES ////
 
+// cache the current info (ddrp and log file name) to a file to be used quickly in the future
+void DatabaseManager::cacheDBMInfo() {
+    std::fstream cache(this->cacheFile, std::ios::out | std::ios::trunc | std::ios::binary);
+    
+    // safety feature ensures not sending empty data
+    if(this->path == "")
+        this->path = "db/";
+    if(this->logfile == "")
+        this->logfile = ".empdblog.bin";
+    
+    std::strncpy(this->pathWriter, this->path.c_str(), 255); this->pathWriter[255] = '\0';
+    std::strncpy(this->logFileWriter, this->logfile.c_str(), 255); this->logFileWriter[255] = '\0';
+    cache.write((char*)&this->pathWriter, sizeof(this->pathWriter));
+    cache.write((char*)&this->logFileWriter, sizeof(this->logFileWriter));
+    cache.close();
+}
+
+// read the cache data and relay the information back to the constructor
+void DatabaseManager::readDBMCacheData() {
+    std::fstream cache(this->cacheFile, std::ios::in | std::ios::binary);
+    cache.read((char*)&this->pathWriter, sizeof(this->pathWriter));
+    cache.read((char*)&this->logFileWriter, sizeof(this->logFileWriter));
+
+    this->path = std::string(this->pathWriter);
+    this->logfile = std::string(this->logFileWriter);
+
+    bool err = false;
+
+    if(this->path == "") {
+        std::cout<<std::endl; err = true;
+        std::cout<<"WARN: Path (DDRP) could not be found in cache. Using default path 'db/'"<<std::endl;
+        this->path = "db/"; // default path
+
+    }
+    if(this->logfile == "") {
+        if(!err)
+            std::cout<<std::endl;
+        std::cout<<"WARN: Log file could not be found in cache. Using default log file '.empdblog.bin'"<<std::endl;
+        this->logfile = ".empdblog.bin"; // default log file
+    }
+    if(err) {
+        std::cout<<std::endl;
+        this->cacheDBMInfo();
+    }
+
+    cache.close();
+}
+
 // check the status of the log file to ensure it exists
 void DatabaseManager::initLogMap() {
-    this->checkLogStatusSilent();
+    this->verifyLogIntegritySilent();
     std::fstream log(this->path+this->logfile, std::ios::in | std::ios::binary);
 
     // gather all available databases into map
@@ -126,13 +183,43 @@ void DatabaseManager::initLogMap() {
     log.close();
 }
 
+// check the status of the cache file
+bool DatabaseManager::verifyCacheIntegrity() {
+    std::fstream cache(this->cacheFile, std::ios::in | std::ios::binary);
+    if(!cache.is_open()) {
+        cache.close();
+        cache.open(this->cacheFile, std::ios::out | std::ios::binary);
+        cache.close(); // log file created
+        cacheDBMInfo(); // prevent errors later
+        std::cout<<"\nOK: Cache file created..."<<std::endl<<std::endl;
+        return false;
+    }
+    cache.close();
+    return true;
+}
+
+bool DatabaseManager::verifyCacheIntegritySilent() {
+    std::fstream cache(this->cacheFile, std::ios::in | std::ios::binary);
+    if(!cache.is_open()) {
+        cache.close();
+        cache.open(this->cacheFile, std::ios::out | std::ios::binary);
+        cache.close(); // log file created
+        cacheDBMInfo(); // prevent errors later
+        return false;
+    }
+    cache.close();
+    return true;
+}
+
 // check the status of the log file (actively)
-bool DatabaseManager::checkLogStatus() {
+bool DatabaseManager::verifyLogIntegrity() {
     std::fstream log(this->path + this->logfile, std::ios::in | std::ios::binary);
     if(!log.is_open()) {
         log.close();
+        fs::create_directories(this->path);
         log.open(this->path + this->logfile, std::ios::out | std::ios::binary);
         log.close(); // log file created
+        std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
         return false;
     }
     log.close();
@@ -140,10 +227,11 @@ bool DatabaseManager::checkLogStatus() {
 }
 
 // silently check the status of the log file to ensure it exists
-bool DatabaseManager::checkLogStatusSilent() {
+bool DatabaseManager::verifyLogIntegritySilent() {
     std::fstream log(this->path + this->logfile, std::ios::in | std::ios::binary);
     if(!log.is_open()) {
         log.close();
+        fs::create_directories(this->path);
         log.open(this->path + this->logfile, std::ios::out | std::ios::binary);
         log.close(); // log file created
         return false;
@@ -152,7 +240,7 @@ bool DatabaseManager::checkLogStatusSilent() {
     return true;
 }
 
-// make sure that the database binary exists
+// make sure that the database binary exists (actively)
 bool DatabaseManager::verifyDatabaseIntegrity(std::string db_name) {
     std::fstream check(this->path+db_name, std::ios::in);
     if(!check.is_open()) {
@@ -166,9 +254,22 @@ bool DatabaseManager::verifyDatabaseIntegrity(std::string db_name) {
     return true;
 }
 
+// silently make sure that the database binary exists
+bool DatabaseManager::verifyDatabaseIntegritySilent(std::string db_name) {
+    std::fstream check(this->path+db_name, std::ios::in);
+    if(!check.is_open()) {
+        check.close();
+        check.open(this->path+db_name, std::ios::out);
+        check.close(); // log file created
+        return false;
+    }
+    check.close();
+    return true;
+}
+
 // append a new database name to the log file
 void DatabaseManager::appendToLog(std::string newdb_name) {
-    this->checkLogStatus(); // create log if log file not already created
+    this->verifyLogIntegrity(); // create log if log file not already created
     std::fstream log(this->path + this->logfile, std::ios::in | std::ios::out | std::ios::binary); // open in in/out to avoid truncating data!!!
     
     // look for empty database slots to overwrite first
@@ -192,7 +293,7 @@ void DatabaseManager::appendToLog(std::string newdb_name) {
 // check if a string has non A-Z a-z characters (for creating databases)
 bool DatabaseManager::findInvalid(std::string input) {
     for(char c : input) {
-        if(!((c >= 'A' && c <= 'Z')||(c >= 'a' && c <= 'z')))
+        if(!((c >= 'A' && c <= 'Z')||(c >= 'a' && c <= 'z')||(c == '-' || c == '_' || c == '.')||(c >= '0' && c <= '9')))
             return true;
     }
     return false;
@@ -205,4 +306,13 @@ void DatabaseManager::listDatabases() {
     // only write out databases not yet deleted (no bangs)
     for(std::map<std::string, long>::iterator it = this->begin(); it != this->end(); ++it)
             std::cout<<((it->first)!="!"?"- "+it->first+"\n":"");
+}
+
+// append the .bin extension to the log file if not already done
+std::string DatabaseManager::fixLogExtension(std::string fileName) {
+    if(fileName.length()<4)
+        fileName+=".bin";
+    else if(fileName.substr(fileName.length()-5, 4) != ".bin")
+        fileName+=".bin";
+    return fileName;
 }

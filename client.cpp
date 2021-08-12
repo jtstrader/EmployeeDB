@@ -6,7 +6,7 @@
 #include "./headers/DatabaseManager.h"
 
 // menus
-void dbSelect();
+void dbSelect(std::string path = "", std::string log = "");
 void dbMenu(EMap& em, std::string db_name);
 
 // db select menu switch functions
@@ -26,31 +26,123 @@ void exportEmployees(EMap& em);
 
 
 // utils
+int checkArgs(int argc, char** argv, std::string& ddrp, std::string& log);
+void displayManual();
 std::string smartCenterHeader(std::string text, int width);
 bool findInvalid(std::string input);
-bool checkLogStatus();
+bool verifyLogIntegrity();
 void appendToLog(std::string newdb_name);
 FilterType getFilterType();
 std::string getFilterCMP(FilterType ftype);
 
 int main(int argc, char** argv) {
-    dbSelect(); // main function to select, delete, and/or add databases. all functions are run within this method.
+    std::string ddrp = "", log = "";
+    int code = checkArgs(argc, argv, ddrp, log);
+    if(code == -1) return 1; // argument misuse
+    else if(code == -2) return 0; // help menu
+
+    // main function to select, delete, and/or add databases. all database functions are run within this method.
+    else if(code == 1) dbSelect(); // no arguments defined
+    else if(code == 2) dbSelect(ddrp, ".empdblog.bin"); // ddrp defined
+    else if(code == 3) dbSelect("db/", log); // log defined
+    else if(code == 4) dbSelect(ddrp, log); // ddrp and log defined 
     return 0;
+}
+
+// check all inputted arguments to determine if the user wishes to define a ddrp/log file
+int checkArgs(int argc, char** argv, std::string& ddrp, std::string& log) {
+    if(argc == 1) {
+        return 1; // basic confirm
+    }
+    for(int i=1; i<argc; i++) {
+        if(std::strcmp(argv[i], "--help") == 0) {
+            std::cout<<std::endl;
+            displayManual();
+            return -2; // manual code
+        }
+        else if(std::strcmp(argv[i], "-d") == 0 || std::strcmp(argv[i], "--ddrp") == 0) {
+            // make sure there is no flag misuse
+            if(i == argc-1) {
+                std::cerr<<"\nEmployeeDB: Incorrect use of arguments, you must define a file after a flag!"<<std::endl;
+                std::cout<<"EmployeeDB: usage: ./EmployeeDB.exe -d PATH ..."<<std::endl<<std::endl;
+                return -1;
+            }
+            else if(std::strcmp(argv[i+1], "-l") == 0 || std::strcmp(argv[i+1], "--log") == 0) {
+                std::cerr<<"\nEmployeeDB: Incorrect use of arguments, you cannot have two arguments next to each other!"<<std::endl;
+                std::cout<<"EmployeeDB: usage: ./EmployeeDB.exe -d PATH -l FILE"<<std::endl<<std::endl;
+                return -1;
+            }
+            else {
+                ddrp = argv[i+1];
+                if(ddrp[ddrp.size()-1] != '/') ddrp+="/";
+                i++;
+            }
+        }
+        else if(std::strcmp(argv[i], "-l") == 0 || std::strcmp(argv[i], "--log") == 0) {
+            // make sure there is no flag misuse
+            if(i == argc-1) {
+                std::cerr<<"\nEmployeeDB: Incorrect use of arguments, you must define a file after a flag!"<<std::endl;
+                std::cout<<"EmployeeDB: usage: ./EmployeeDB.exe -l FILE ..."<<std::endl<<std::endl;
+                return -1;
+            }
+            else if(std::strcmp(argv[i+1], "-d") == 0 || std::strcmp(argv[i+1], "--ddrp") == 0) {
+                std::cerr<<"\nEmployeeDB: Incorrect use of arguments, you cannot have two arguments next to each other!"<<std::endl;
+                std::cout<<"EmployeeDB: usage: ./EmployeeDB.exe -d PATH -l FILE"<<std::endl<<std::endl;
+                return -1;
+            }
+            else {
+                log = argv[i+1];
+                i++;
+            }
+        }
+        else {
+            std::cerr<<"\nEmployeeDB: Incorrect use of arguments. Use ./EmployeeDB.exe --help for more information."<<std::endl<<std::endl;
+            return -1; // flag error code
+        }
+    }
+    if(ddrp == "" && log == "") {
+        return 1; // basic confirm
+    }
+    else if(ddrp != "" && log == "") {
+        return 2; // ddrp defined, log default
+    }
+    else if(ddrp == "" && log != "") {
+        return 3; // ddrp default, log defined
+    }
+    else if(ddrp != "" && log != "") {
+        return 4; // ddrp defined, log defined
+    }
+    else
+        return -404; // remove compiler warning message
+}
+
+// display the "man" page of the program (./man)
+void displayManual() {
+    std::fstream man("man", std::ios::in);
+    std::string line;
+    while(getline(man, line))
+        std::cout<<line<<std::endl;
+    man.close();
 }
 
 //// DATABASE SELECTOR FUNCTIONS ////
 
 // highest order menu for selecting databases
-void dbSelect() {
-    DatabaseManager dbm; char option;
+void dbSelect(std::string path, std::string log) {
+    DatabaseManager* dbm;
+    if(path == "" && log == "")
+        dbm = new DatabaseManager;
+    else
+        dbm = new DatabaseManager(path, log); 
+    char option;
     do {
         option = dbSelectOption();
         std::string connected = "";
         switch(option) {
-            case 'a': createdb(dbm); break;
-            case 'b': listdbs(dbm); break;
-            case 'c': connected = connectdb(dbm); break;
-            case 'd': deletedb(dbm); break;
+            case 'a': createdb(*dbm); break;
+            case 'b': listdbs(*dbm); break;
+            case 'c': connected = connectdb(*dbm); break;
+            case 'd': deletedb(*dbm); break;
             case 'x': break;
             default:
                 std::cerr<<"Invalid command. Please try again."<<std::endl<<std::endl;
@@ -58,8 +150,8 @@ void dbSelect() {
         }
         if(connected != "") {
             // database locked on, start db menu
-            EMap em; em.setFileName(dbm.getDB_NAME_WITH_PATH()); em.load();
-            dbMenu(em, dbm.getDB_NAME_NO_PATH());
+            EMap em; em.setFileName(dbm->getDB_NAME_WITH_PATH()); em.load();
+            dbMenu(em, dbm->getDB_NAME_NO_PATH());
         }
     } while(option != 'x');
 }
@@ -83,7 +175,12 @@ char dbSelectOption() {
 bool createdb(DatabaseManager& dbm) {
     std::string input;
     while(true) {
-        std::cout<<"Enter the name of your new database. Spaces and special characters are not allowed. Must be under 50 characters. (Enter -1 to Exit): ";
+        std::cout<<"-- Database Creation --\n";
+        std::cout<<"-  1. Spaces and special characters are not allowed.\n";
+        std::cout<<"-    1a. Allowed special characters: -, _, ., numbers 1-9\n";
+        std::cout<<"-  2. Must be under 50 characters.\n";
+        std::cout<<"-  3. Cannot have a duplicate database name.\n";
+        std::cout<<"-- Enter your new database name (Enter -1 to Exit): ";
         getline(std::cin, input);
         if(input == "") {
             std::cout<<"\nERR: You cannot create a file with an empty name! Please input a valid database name."<<std::endl<<std::endl;
@@ -171,7 +268,6 @@ std::string connectdb(DatabaseManager& dbm) {
             if(code == 1)
                 return input;
             else if(code == -1) {
-                std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
                 continue;
             }
             else if(code == -2) {

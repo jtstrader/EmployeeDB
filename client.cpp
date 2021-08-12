@@ -43,8 +43,8 @@ int main(int argc, char** argv) {
 
     // main function to select, delete, and/or add databases. all database functions are run within this method.
     else if(code == 1) dbSelect(); // no arguments defined
-    else if(code == 2) dbSelect(ddrp, ".empdblog.bin"); // ddrp defined
-    else if(code == 3) dbSelect("db/", log); // log defined
+    else if(code == 2) dbSelect(ddrp, ""); // ddrp defined
+    else if(code == 3) dbSelect("", log); // log defined
     else if(code == 4) dbSelect(ddrp, log); // ddrp and log defined 
     return 0;
 }

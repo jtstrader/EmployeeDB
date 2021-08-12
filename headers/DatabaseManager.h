@@ -29,6 +29,8 @@ class DatabaseManager : std::multimap<std::string, long> {
         // utilities
         void cacheDBMInfo();
         void readDBMCacheData();
+        void readDBMCacheDataChanges(std::string ddrp, std::string log);
+        void setPWD();
         void initLogMap();
         void appendToLog(std::string newdb_name);
         bool findInvalid(std::string input);
@@ -52,8 +54,9 @@ class DatabaseManager : std::multimap<std::string, long> {
 
     private:
         std::string db_name; // the currently selected database
-        std::string path; // the path to the selected database
-        std::string logfile; // the log file that keeps track of all databases
+        std::string path; // the path to the DDRP (databases directory)
+        std::string logfile; // the log file that keeps track of all databases of the containing folder
+        std::string pwd; // present working directory ( path + logfile + / )
 
         char pathWriter[256];
         char logFileWriter[256];

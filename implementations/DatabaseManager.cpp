@@ -4,14 +4,29 @@ DatabaseManager::DatabaseManager() {
     this->db_name = "";
     this->verifyCacheIntegritySilent();
     this->readDBMCacheData();
+    this->setPWD();
     this->connected = false;
     this->initLogMap();
 }
 
 DatabaseManager::DatabaseManager(std::string ddrp, std::string log) {
     this->db_name = "";
-    this->path = ddrp;
-    this->logfile = this->fixLogExtension(log);
+    this->readDBMCacheData();
+    if(ddrp != "") {
+        this->path = ddrp;
+        if(log == "")
+            this->logfile = ".empdblog.bin";
+    }
+    if(log != "") {
+        this->logfile = log;
+    }
+    
+    this->logfile = this->fixLogExtension(this->logfile);
+
+    std::cout<<"ddrp: "<<this->path<<std::endl;
+    std::cout<<"log: "<<this->logfile<<std::endl;
+
+    this->setPWD();
     this->cacheDBMInfo();
     this->connected = false;
     this->initLogMap();
@@ -25,7 +40,7 @@ DatabaseManager::~DatabaseManager() {
 
 // get the relative path of the database
 std::string DatabaseManager::getDB_NAME_WITH_PATH() {
-    return this->path + this->db_name;
+    return this->pwd + this->db_name;
 }
 
 // get the physical name of the database, NOT the relative path
@@ -141,6 +156,11 @@ void DatabaseManager::cacheDBMInfo() {
 // read the cache data and relay the information back to the constructor
 void DatabaseManager::readDBMCacheData() {
     std::fstream cache(this->cacheFile, std::ios::in | std::ios::binary);
+    if(!cache.is_open()) {
+        // cache not yet created
+        cache.close();
+        return;
+    }
     cache.read((char*)&this->pathWriter, sizeof(this->pathWriter));
     cache.read((char*)&this->logFileWriter, sizeof(this->logFileWriter));
 
@@ -169,10 +189,18 @@ void DatabaseManager::readDBMCacheData() {
     cache.close();
 }
 
+// set the pwd folder for all relevant information to be stored in this folder
+void DatabaseManager::setPWD() {
+    this->pwd = this->path+this->logfile.substr(0, this->logfile.length()-4)+"/";
+    if(!fs::exists(this->pwd)) {
+        fs::create_directories(this->pwd);
+    }
+}
+
 // check the status of the log file to ensure it exists
 void DatabaseManager::initLogMap() {
     this->verifyLogIntegritySilent();
-    std::fstream log(this->path+this->logfile, std::ios::in | std::ios::binary);
+    std::fstream log(this->pwd+this->logfile, std::ios::in | std::ios::binary);
 
     // gather all available databases into map
     long offset = log.tellg(); char read[54];
@@ -213,11 +241,11 @@ bool DatabaseManager::verifyCacheIntegritySilent() {
 
 // check the status of the log file (actively)
 bool DatabaseManager::verifyLogIntegrity() {
-    std::fstream log(this->path + this->logfile, std::ios::in | std::ios::binary);
+    std::fstream log(this->pwd+this->logfile, std::ios::in | std::ios::binary);
     if(!log.is_open()) {
         log.close();
-        fs::create_directories(this->path);
-        log.open(this->path + this->logfile, std::ios::out | std::ios::binary);
+        fs::create_directories(this->pwd);
+        log.open(this->pwd+this->logfile, std::ios::out | std::ios::binary);
         log.close(); // log file created
         std::cout<<"\nOK: Log file created. No databases to initialize. Exiting initialization section..."<<std::endl<<std::endl;
         return false;
@@ -228,11 +256,11 @@ bool DatabaseManager::verifyLogIntegrity() {
 
 // silently check the status of the log file to ensure it exists
 bool DatabaseManager::verifyLogIntegritySilent() {
-    std::fstream log(this->path + this->logfile, std::ios::in | std::ios::binary);
+    std::fstream log(this->pwd+this->logfile, std::ios::in | std::ios::binary);
     if(!log.is_open()) {
         log.close();
-        fs::create_directories(this->path);
-        log.open(this->path + this->logfile, std::ios::out | std::ios::binary);
+        fs::create_directories(this->pwd);
+        log.open(this->pwd+this->logfile, std::ios::out | std::ios::binary);
         log.close(); // log file created
         return false;
     }
@@ -242,11 +270,11 @@ bool DatabaseManager::verifyLogIntegritySilent() {
 
 // make sure that the database binary exists (actively)
 bool DatabaseManager::verifyDatabaseIntegrity(std::string db_name) {
-    std::fstream check(this->path+db_name, std::ios::in);
+    std::fstream check(this->pwd+db_name, std::ios::in);
     if(!check.is_open()) {
         check.close();
         std::cout<<"\nWARN: Database file was corrupted and/or deleted. Creating database file now..."<<std::endl<<std::endl;
-        check.open(this->path+db_name, std::ios::out);
+        check.open(this->pwd+db_name, std::ios::out);
         check.close(); // log file created
         return false;
     }
@@ -256,10 +284,10 @@ bool DatabaseManager::verifyDatabaseIntegrity(std::string db_name) {
 
 // silently make sure that the database binary exists
 bool DatabaseManager::verifyDatabaseIntegritySilent(std::string db_name) {
-    std::fstream check(this->path+db_name, std::ios::in);
+    std::fstream check(this->pwd+db_name, std::ios::in);
     if(!check.is_open()) {
         check.close();
-        check.open(this->path+db_name, std::ios::out);
+        check.open(this->pwd+db_name, std::ios::out);
         check.close(); // log file created
         return false;
     }
@@ -270,7 +298,7 @@ bool DatabaseManager::verifyDatabaseIntegritySilent(std::string db_name) {
 // append a new database name to the log file
 void DatabaseManager::appendToLog(std::string newdb_name) {
     this->verifyLogIntegrity(); // create log if log file not already created
-    std::fstream log(this->path + this->logfile, std::ios::in | std::ios::out | std::ios::binary); // open in in/out to avoid truncating data!!!
+    std::fstream log(this->pwd+this->logfile, std::ios::in | std::ios::out | std::ios::binary); // open in in/out to avoid truncating data!!!
     
     // look for empty database slots to overwrite first
     DatabaseManager::iterator it = this->find("!");
@@ -312,7 +340,9 @@ void DatabaseManager::listDatabases() {
 std::string DatabaseManager::fixLogExtension(std::string fileName) {
     if(fileName.length()<4)
         fileName+=".bin";
-    else if(fileName.substr(fileName.length()-5, 4) != ".bin")
+    else if(fileName.length() == 4 && fileName != ".bin")
+        fileName+=".bin";
+    else if(fileName.substr(fileName.length()-4, 4) != ".bin")
         fileName+=".bin";
     return fileName;
 }
